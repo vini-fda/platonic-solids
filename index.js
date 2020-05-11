@@ -3,8 +3,6 @@ import * as THREE from './node_modules/three/build/three.module.js';
 import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { Vector3 } from './node_modules/three/build/three.module.js';
 
-import { GUI } from './node_modules/three/examples/jsm/libs/dat.gui.module.js';
-
 import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
 import { GlitchPass } from './node_modules/three/examples/jsm/postprocessing/GlitchPass.js';
@@ -182,12 +180,10 @@ function render() {
     camera.layers.enable(FACE_LAYER);
     camera.layers.enable(EDGE_LAYER);
     renderer.setScissor( 0, 0, sliderPos, window.innerHeight );
-    //renderer.setClearColor("#000000");
     composer.render(scene, camera);
 
     camera.layers.set(EDGE_LAYER);
     renderer.setScissor( sliderPos, 0, window.innerWidth, window.innerHeight );
-    //bwComposer.renderer.setClearColor("#ffffff");
     bwComposer.render(scene, camera);
 }
 
