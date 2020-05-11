@@ -1,16 +1,16 @@
 // let THREE = require('three');
-import * as THREE from './node_modules/three/build/three.module.js';
-import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { Vector3 } from './node_modules/three/build/three.module.js';
+import * as THREE from 'three/build/three.module';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { Vector3 } from 'three/build/three.module';
 
-import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
-import { GlitchPass } from './node_modules/three/examples/jsm/postprocessing/GlitchPass.js';
-import { UnrealBloomPass } from './node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 
 
 import { CustomShader } from './CustomShader.js'
-import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 
 let scene, camera, renderer, composer,  theta, controls;
 let bwComposer;
