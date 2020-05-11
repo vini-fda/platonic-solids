@@ -20,7 +20,7 @@ const EDGE_LAYER = 1;
 
 
 
-class Polihedron {
+class Polyhedron {
     constructor(position, geometry, meshMat, lineMat) {
         let meshMaterial, lineMaterial;
 
@@ -103,7 +103,7 @@ function init() {
         }
     }
     for(let i=0; i < 5; i++) {
-        let poly = new Polihedron(new Vector3(2*(i - 2.0), 0, 0), poly_lookup(i));
+        let poly = new Polyhedron(new Vector3(2*(i - 2.0), 0, 0), poly_lookup(i));
         poly.group.traverse((child) => {
             if(child instanceof THREE.Mesh)
                 child.layers.set(FACE_LAYER);
