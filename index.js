@@ -15,15 +15,11 @@ import { CustomShader } from './CustomShader.js'
 import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
 
 let scene, camera, renderer, composer,  theta, controls;
-let white_scene, bwComposer;
-let p1, p2, p3, p4, p5;
+let bwComposer;
 let faceLayer, edgeLayer;
 const FACE_LAYER = 0;
 const EDGE_LAYER = 1;
 
-//Slider
-// let sliderPos = window.innerWidth / 2;
-// let sliderMoved = false;
 
 
 class Polihedron {
@@ -94,7 +90,6 @@ function init() {
     light.position.set(10, 0, 25);
     scene.add(light);
 
-    let objs1 = []
     let poly_lookup = function(n) {
         switch (n) {
             case 0: 
@@ -172,7 +167,6 @@ function init() {
     bwComposer.addPass(renderPass);
     bwComposer.addPass(bwPass);
 
-    //initComparisons();
 }
 
 
@@ -180,11 +174,6 @@ let animate = function(prevTime, currTime) {
     const dt = (currTime-prevTime)/1000.0;
     render();
 
-    // objs1[0].group.rotation.x = theta;
-    // objs1[1].group.rotation.x = theta - Math.PI / 3;
-    // objs1[2].group.rotation.x = theta;
-    // objs1[3].group.rotation.x = theta;
-    // objs1[4].group.rotation.x = theta;
     theta += dt;
     requestAnimationFrame((timestamp) => animate(currTime, timestamp));
 }
@@ -200,53 +189,6 @@ function render() {
     renderer.setScissor( sliderPos, 0, window.innerWidth, window.innerHeight );
     //bwComposer.renderer.setClearColor("#ffffff");
     bwComposer.render(scene, camera);
-}
-
-function initComparisons() {
-
-    var slider = document.querySelector( '.slider' );
-
-    var clicked = false;
-
-    function slideReady() {
-
-        clicked = true;
-        controls.enabled = false;
-
-    }
-
-    function slideFinish() {
-
-        clicked = false;
-        controls.enabled = true;
-
-    }
-
-    function slideMove( e ) {
-
-        if ( ! clicked ) return false;
-
-        sliderMoved = true;
-
-        sliderPos = ( e.pageX === undefined ) ? e.touches[ 0 ].pageX : e.pageX;
-
-        //prevent the slider from being positioned outside the window bounds
-        if ( sliderPos < 0 ) sliderPos = 0;
-        if ( sliderPos > window.innerWidth ) sliderPos = window.innerWidth;
-
-        slider.style.left = sliderPos - ( slider.offsetWidth / 2 ) + "px";
-
-    }
-
-    slider.addEventListener( 'mousedown', slideReady );
-    slider.addEventListener( 'touchstart', slideReady );
-
-    window.addEventListener( 'mouseup', slideFinish );
-    window.addEventListener( 'touchend', slideFinish );
-
-    window.addEventListener( 'mousemove', slideMove );
-    window.addEventListener( 'touchmove', slideMove );
-
 }
 
 init();
