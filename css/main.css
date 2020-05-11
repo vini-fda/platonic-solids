@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+}
+
+.slider {
+    position: absolute;
+    cursor: ew-resize;
+
+    width: 40px;
+    height: 40px;
+    background-color: #2196F3;
+    opacity: 0.7;
+    border-radius: 50%;
+
+    top: calc(50% - 20px);
+    left: calc(50% - 20px);
+
+}
+
+.ui {
+    position: absolute;
+  }

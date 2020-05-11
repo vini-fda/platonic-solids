@@ -1,0 +1,254 @@
+// let THREE = require('three');
+import * as THREE from './node_modules/three/build/three.module.js';
+import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
+import { Vector3 } from './node_modules/three/build/three.module.js';
+
+import { GUI } from './node_modules/three/examples/jsm/libs/dat.gui.module.js';
+
+import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+import { GlitchPass } from './node_modules/three/examples/jsm/postprocessing/GlitchPass.js';
+import { UnrealBloomPass } from './node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+
+import { CustomShader } from './CustomShader.js'
+import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
+
+let scene, camera, renderer, composer,  theta, controls;
+let white_scene, bwComposer;
+let p1, p2, p3, p4, p5;
+let faceLayer, edgeLayer;
+const FACE_LAYER = 0;
+const EDGE_LAYER = 1;
+
+//Slider
+// let sliderPos = window.innerWidth / 2;
+// let sliderMoved = false;
+
+
+class Polihedron {
+    constructor(position, geometry, meshMat, lineMat) {
+        let meshMaterial, lineMaterial;
+
+
+        if (meshMat == null) {
+            meshMaterial = new THREE.MeshPhongMaterial({
+                color: 0x156289,
+                emissive: 0x072534,
+                flatShading: true
+            });
+        } else {
+            meshMaterial = meshMat;
+        }
+
+        if(lineMat == null) {
+            lineMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                linewidth: 2,
+                opacity: 0.75
+            });
+        } else {
+            lineMaterial = lineMat;
+        }
+
+        this.group = new THREE.Group();
+        let wireframe = new THREE.EdgesGeometry(geometry);
+        this.group.add( new THREE.LineSegments(wireframe, lineMaterial));
+        this.group.add( new THREE.Mesh(geometry, meshMaterial));
+        this.group.position.copy(position);
+    }
+}
+
+function init() {
+    scene = new THREE.Scene();
+    white_scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75,window.innerWidth / window.innerHeight,0.1,1000);
+    camera.position.z = 5;
+    theta = 0;
+
+    faceLayer = new THREE.Layers();
+    faceLayer.set(FACE_LAYER);
+
+    edgeLayer = new THREE.Layers();
+    edgeLayer.set(EDGE_LAYER);
+
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setClearColor("#000000");
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setScissorTest( true );
+
+
+    document.body.appendChild(renderer.domElement);
+
+    window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        if ( ! sliderMoved ) sliderPos = window.innerWidth / 2;
+    });
+
+    let light = new THREE.PointLight(0xFFFFFF, 2, 500);
+    light.position.set(10, 0, 25);
+    scene.add(light);
+
+    let objs1 = []
+    let poly_lookup = function(n) {
+        switch (n) {
+            case 0: 
+                return new THREE.TetrahedronBufferGeometry(1, 0);
+            case 1:
+                return new THREE.BoxBufferGeometry(1, 0);
+            case 2:
+                return new THREE.OctahedronBufferGeometry(1, 0);
+            case 3:
+                return new THREE.DodecahedronBufferGeometry(1, 0);
+            case 4:
+            default:
+                return new THREE.IcosahedronBufferGeometry(1, 0);
+        }
+    }
+    for(let i=0; i < 5; i++) {
+        let poly = new Polihedron(new Vector3(2*(i - 2.0), 0, 0), poly_lookup(i));
+        poly.group.traverse((child) => {
+            if(child instanceof THREE.Mesh)
+                child.layers.set(FACE_LAYER);
+            else if(child instanceof THREE.LineSegments)
+                child.layers.set(EDGE_LAYER);
+        })
+        scene.add(poly.group);
+    }
+
+
+    controls = new OrbitControls( camera, renderer.domElement );
+    controls.minDistance = 0.1;
+    controls.maxDistance = 50;
+    controls.maxPolarAngle = Math.PI;
+    
+    //Post-processing
+    let renderPass = new RenderPass(scene, camera);
+    let bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
+    bloomPass.threshold = 0;
+    bloomPass.strength = 3;
+    bloomPass.radius = 0;
+    composer = new EffectComposer(renderer);
+    composer.addPass(renderPass);
+    let customPass = new ShaderPass(CustomShader);
+    composer.addPass(customPass);
+    composer.addPass(new GlitchPass(0.5));
+    //composer.addPass(bloomPass);
+    //White and black
+    bwComposer = new EffectComposer(renderer);
+    let bwPass = new ShaderPass({
+
+        uniforms: {
+
+            "tDiffuse": { value: null },
+            "opacity": { value: 1.0 }
+
+        },
+        vertexShader: `varying vec2 vUv;
+		void main() {
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+        }`,
+        fragmentShader: `uniform float opacity;
+
+		uniform sampler2D tDiffuse;
+
+		varying vec2 vUv;
+
+		void main() {
+
+            vec4 texel = texture2D( tDiffuse, vUv );
+            vec4 invTexel = vec4(vec3(1.0) - texel.rgb, texel.a);
+			gl_FragColor = opacity * invTexel;
+
+		}`
+    });
+    bwComposer.addPass(renderPass);
+    bwComposer.addPass(bwPass);
+
+    //initComparisons();
+}
+
+
+let animate = function(prevTime, currTime) {
+    const dt = (currTime-prevTime)/1000.0;
+    render();
+
+    // objs1[0].group.rotation.x = theta;
+    // objs1[1].group.rotation.x = theta - Math.PI / 3;
+    // objs1[2].group.rotation.x = theta;
+    // objs1[3].group.rotation.x = theta;
+    // objs1[4].group.rotation.x = theta;
+    theta += dt;
+    requestAnimationFrame((timestamp) => animate(currTime, timestamp));
+}
+
+function render() {
+    camera.layers.enable(FACE_LAYER);
+    camera.layers.enable(EDGE_LAYER);
+    renderer.setScissor( 0, 0, sliderPos, window.innerHeight );
+    //renderer.setClearColor("#000000");
+    composer.render(scene, camera);
+
+    camera.layers.set(EDGE_LAYER);
+    renderer.setScissor( sliderPos, 0, window.innerWidth, window.innerHeight );
+    //bwComposer.renderer.setClearColor("#ffffff");
+    bwComposer.render(scene, camera);
+}
+
+function initComparisons() {
+
+    var slider = document.querySelector( '.slider' );
+
+    var clicked = false;
+
+    function slideReady() {
+
+        clicked = true;
+        controls.enabled = false;
+
+    }
+
+    function slideFinish() {
+
+        clicked = false;
+        controls.enabled = true;
+
+    }
+
+    function slideMove( e ) {
+
+        if ( ! clicked ) return false;
+
+        sliderMoved = true;
+
+        sliderPos = ( e.pageX === undefined ) ? e.touches[ 0 ].pageX : e.pageX;
+
+        //prevent the slider from being positioned outside the window bounds
+        if ( sliderPos < 0 ) sliderPos = 0;
+        if ( sliderPos > window.innerWidth ) sliderPos = window.innerWidth;
+
+        slider.style.left = sliderPos - ( slider.offsetWidth / 2 ) + "px";
+
+    }
+
+    slider.addEventListener( 'mousedown', slideReady );
+    slider.addEventListener( 'touchstart', slideReady );
+
+    window.addEventListener( 'mouseup', slideFinish );
+    window.addEventListener( 'touchend', slideFinish );
+
+    window.addEventListener( 'mousemove', slideMove );
+    window.addEventListener( 'touchmove', slideMove );
+
+}
+
+init();
+animate(0, 0);
+

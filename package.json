@@ -1,0 +1,17 @@
+{
+  "name": "platonic-solids",
+  "version": "1.0.0",
+  "description": "Three.js platonic solids",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "three.js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.116.1"
+  }
+}
