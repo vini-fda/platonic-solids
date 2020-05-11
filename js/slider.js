@@ -7,6 +7,7 @@ function initComparisons() {
     var slider = document.querySelector( '.slider' );
 
     var clicked = false;
+    let touched = false;
 
     function slideReady() {
 
@@ -20,6 +21,13 @@ function initComparisons() {
         clicked = false;
         //controls.enabled = true;
 
+    }
+    function slideReadyTouch() {
+        touched = true;
+    }
+
+    function slideFinishTouch() {
+        touched = false;
     }
 
     function slideMove( e ) {
@@ -40,15 +48,32 @@ function initComparisons() {
 
     }
 
+    function slideMoveTouch(e) {
+        if ( ! touched ) return false;
+
+        sliderMoved = true;
+
+        sliderPos =  e.touches[ 0 ].pageX;
+
+        //prevent the slider from being positioned outside the window bounds
+        if ( sliderPos < 0 ) sliderPos = 0;
+        if ( sliderPos > window.innerWidth ) sliderPos = window.innerWidth;
+
+        slider.style.left = sliderPos - ( slider.offsetWidth / 2 ) + "px";
+
+        updateClipMask();
+
+    }
+
 
     slider.addEventListener( 'mousedown', slideReady );
-    slider.addEventListener( 'touchstart', slideReady );
+    slider.addEventListener( 'touchstart', slideReadyTouch );
 
     window.addEventListener( 'mouseup', slideFinish );
-    window.addEventListener( 'touchend', slideFinish );
+    window.addEventListener( 'touchend', slideFinishTouch );
 
     window.addEventListener( 'mousemove', slideMove );
-    window.addEventListener( 'touchmove', slideMove );
+    window.addEventListener( 'touchmove', slideMoveTouch );
 
 }
 
